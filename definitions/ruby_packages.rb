@@ -75,4 +75,22 @@ define :ruby_packages, :action => :install do
       end
     end
   end
+
+  ruby_block "add_gem_bin_path" do
+    block do
+      @gemdir = `/usr/bin/gem#{rv} env gemdir`.chomp
+      unless @gemdir.empty?
+        # we need our new gem bin dir to be added to our current path and BEFORE any other rubies (like vagrant's /opt/ruby)
+        ENV['PATH'] = "#{@gemdir}/bin:#{ENV['PATH']}"
+      end
+    end
+  end
+
+  case node[:platform]
+  when "ubuntu","debian"
+    cookbook_file "/etc/profile.d/rubygems.sh" do
+      source "rubygems.sh"
+      mode 0644
+    end
+  end
 end
